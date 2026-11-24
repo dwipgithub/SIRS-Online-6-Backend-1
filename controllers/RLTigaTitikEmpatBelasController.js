@@ -3,6 +3,7 @@ import Joi from "joi";
 import joiDate from "@joi/date"
 import { rlTigaTitikEmpatBelas, rlTigaTitikEmpatBelasDetail } from "../models/RLTigaTitikEmpatBelasModel.js";
 import { RLTigaTitikEmpatBelasJenisKegiatan } from "../models/RLTigaTitikEmpatBelasJenisKegiatanModel.js";
+import { periodeDariQuery } from "../services/Periode.js"
 
 export const getDataRLTigaTitikEmpatBelasDetailKegiatan= (req, res) => {
   const joi = Joi.extend(joiDate) 
@@ -33,12 +34,12 @@ export const getDataRLTigaTitikEmpatBelasDetailKegiatan= (req, res) => {
     }
     whereClause = {
       rs_id: req.user.satKerId,
-      tahun: req.query.tahun,
+      tahun: periodeDariQuery(req.query.tahun),
     }
   }else{
     whereClause = {
       rs_id: req.query.rsId,
-      tahun: req.query.tahun,
+      tahun: periodeDariQuery(req.query.tahun),
     }
   }
 
@@ -131,14 +132,14 @@ export const insertDataRLTigaTitikEmpatBelas = async (req, res) => {
       {
         rs_id: req.user.satKerId,
         user_id: req.user.id,
-        tahun: req.body.tahunDanBulan,
+        tahun: periodeDariQuery(req.body.tahunDanBulan),
       },
       { transaction }
     );
     const dataDetail = req.body.data.map((value, index) => {
 
       return {
-        tahun: req.body.tahunDanBulan,
+        tahun: periodeDariQuery(req.body.tahunDanBulan),
         rs_id: req.user.satKerId,
         rl_tiga_titik_empat_belas_id: rlInsertHeader.id,
         rl_tiga_titik_empat_belas_jenis_kegiatan_id: value.rLTigaTitikEmpatBelasJenisKegiatanId,

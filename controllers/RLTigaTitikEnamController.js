@@ -1,13 +1,14 @@
 import { databaseSIRS } from '../config/Database.js'
 import { rlTigaTitikEnamHeader, rlTigaTitikEnamDetail, jenisKegiatan, jenisGroupKegiatanHeader } from '../models/RLTigaTitikEnamModel.js'
 import Joi from 'joi'
+import { periodeDariQuery } from '../services/Periode.js'
 
 export const getDataRLTigaTitikEnam = (req, res) => {
     rlTigaTitikEnamHeader.findAll({
         attributes: ['id','tahun'],
         where:{
             rs_id: req.query.rsId,
-            tahun: req.query.tahun
+            tahun: periodeDariQuery(req.query.tahun)
         },
         include:{
             model: rlTigaTitikEnamDetail,
@@ -83,7 +84,7 @@ export const insertDataRLTigaTitikEnam =  async (req, res) => {
     try {
         const resultInsertHeader = await rlTigaTitikEnamHeader.create({
             rs_id: req.user.satKerId,
-            tahun: req.body.tahunDanBulan,
+            tahun: periodeDariQuery(req.body.tahunDanBulan),
             user_id: req.user.id
         }, { 
             transaction: transaction 
@@ -92,7 +93,7 @@ export const insertDataRLTigaTitikEnam =  async (req, res) => {
         const dataDetail = req.body.data.map((value, index) => {
             return {
                 rs_id: req.user.satKerId,
-                tahun: req.body.tahunDanBulan,
+                tahun: periodeDariQuery(req.body.tahunDanBulan),
                 rl_tiga_titik_enam_id: resultInsertHeader.id,
                 jenis_kegiatan_id: value.jenisKegiatanId,
                 rmRumahSakit: value.rmRumahSakit,

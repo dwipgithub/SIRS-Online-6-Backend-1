@@ -13,7 +13,7 @@ import dotenv from "dotenv";
 import { AgeGroups } from "../models/AgeGroups.js";
 import { Op } from "sequelize";
 import { icd } from "../models/ICDModel.js";
-import { periodeAwalBulan } from "../services/Periode.js"
+import { periodeAwalBulan, periodeDariQuery } from "../services/Periode.js"
 dotenv.config();
 
 export const getDataRLLimaTitikSatu = (req, res) => {
@@ -43,12 +43,12 @@ export const getDataRLLimaTitikSatu = (req, res) => {
     }
     whereClause = {
       rs_id: req.user.satKerId,
-      periode: req.query.periode,
+      periode: periodeDariQuery(req.query.periode),
     };
   } else {
     whereClause = {
       rs_id: req.query.rsId,
-      periode: req.query.periode,
+      periode: periodeDariQuery(req.query.periode),
     };
   }
 
@@ -800,7 +800,7 @@ export const getDataRLLimaTitikSatuSatuSehat = async (req, res) => {
       );
       const records = response.data?.data?.records;
       // // SAVE DATA KE DB
-      await saveRecords(records, organization_id, `${periodeget}-01`);
+      await saveRecords(records, organization_id, periodeDariQuery(periodeget));
 
       res.status(200).send({
         status: true,
@@ -900,7 +900,7 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
     const result = await rlLimaTitikSatuSatuSehat.findAll({
       where: {
         organization_id: organization_id, // bisa string atau number, sesuaikan tipe data db
-        periode: periodeget,
+        periode: periodeDariQuery(periodeget),
       },
       attributes: [
         "icd_10",
@@ -1019,7 +1019,7 @@ export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
     const icdList = await rlLimaTitikSatuSatuSehat.findAll({
       where: {
         organization_id,
-        periode: periodeget,
+        periode: periodeDariQuery(periodeget),
       },
       attributes: ["icd_10"],
       group: ["icd_10"],
@@ -1048,7 +1048,7 @@ export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
 
     // Hitung total ICD unik untuk pagination
     const totalIcd = await rlLimaTitikSatuSatuSehat.count({
-      where: { organization_id, periode: periodeget },
+      where: { organization_id, periode: periodeDariQuery(periodeget) },
       distinct: true,
       col: "icd_10",
     });
@@ -1057,7 +1057,7 @@ export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
     const resultRaw = await rlLimaTitikSatuSatuSehat.findAll({
       where: {
         organization_id,
-        periode: periodeget,
+        periode: periodeDariQuery(periodeget),
         icd_10: icdCodes,
       },
       attributes: [

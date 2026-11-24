@@ -9,6 +9,7 @@ import { RLTigaTitikEmpatSatusehat } from "../models/RLTigaTitikEmpatModel.js";
 import axios from "axios";
 import { satu_sehat_id, users_sso } from "../models/UserModel.js";
 import joiDate from "@joi/date";
+import { periodeDariQuery } from "../services/Periode.js"
 
 export const getDataRLTigaTitikEmpat = (req, res) => {
   rlTigaTitikEmpatHeader
@@ -16,7 +17,7 @@ export const getDataRLTigaTitikEmpat = (req, res) => {
       attributes: ["id", "tahun"],
       where: {
         rs_id: req.query.rsId,
-        tahun: req.query.tahun,
+        tahun: periodeDariQuery(req.query.tahun),
       },
       include: {
         model: rlTigaTitikEmpatDetail,
@@ -249,7 +250,7 @@ export const insertDataRLTigaTitikEmpat = async (req, res) => {
     const resultInsertHeader = await rlTigaTitikEmpatHeader.create(
       {
         rs_id: req.user.satKerId,
-        tahun: req.body.tahunDanBulan,
+        tahun: periodeDariQuery(req.body.tahunDanBulan),
         user_id: req.user.id,
       },
       { transaction }
@@ -258,7 +259,7 @@ export const insertDataRLTigaTitikEmpat = async (req, res) => {
     const dataDetail = req.body.data.map((value, index) => {
       return {
         rs_id: req.user.satKerId,
-        tahun: req.body.tahunDanBulan,
+        tahun: periodeDariQuery(req.body.tahunDanBulan),
         rl_tiga_titik_empat_id: resultInsertHeader.id,
         jenis_pengunjung_id: value.jenisPengunjungId,
         jumlah: value.jumlah,

@@ -6,7 +6,7 @@ import {
 } from "../models/RLTigaTitikDelapanModel.js";
 import Joi from "joi";
 import joiDate from "@joi/date"
-import { periodeAwalBulan } from "../services/Periode.js"
+import { periodeAwalBulan, periodeDariQuery } from "../services/Periode.js"
 
 export const getDataRLTigaTitikDelapan = (req, res) => {
   rlTigaTitikDelapan
@@ -71,12 +71,12 @@ if(req.user.jenisUserId == 4){
   }
   whereClause = {
     rs_id: req.user.satKerId,
-    periode: req.query.periode,
+    periode: periodeDariQuery(req.query.periode),
   }
 }else{
   whereClause = {
     rs_id: req.query.rsId,
-    periode: req.query.periode,
+    periode: periodeDariQuery(req.query.periode),
   }
 }
 

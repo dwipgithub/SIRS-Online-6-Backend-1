@@ -1,6 +1,7 @@
 import { databaseSIRS } from '../config/Database.js'
 import { rlTigaTitikTujuh, rlTigaTitikTujuhDetail } from '../models/RLTigaTitikTujuhModel.js'
 import Joi from 'joi'
+import { periodeDariQuery } from '../services/Periode.js'
 import {
     groupJenisKegiatan,
     groupJenisKegiatanHeader,
@@ -12,7 +13,7 @@ export const getDataRLTigaTitikTujuh2 = (req, res) => {
         attributes: ['id','tahun'],
         where:{
             rs_id: req.user.rsId,
-            tahun: req.query.tahun
+            tahun: periodeDariQuery(req.query.tahun)
         },
         
         include:{
@@ -68,7 +69,7 @@ export const getDataRLTigaTitikTujuh = (req, res) => {
         ],
         where: {
             rs_id: req.query.rsId,
-            tahun: req.query.tahun,
+            tahun: periodeDariQuery(req.query.tahun),
         },
         include: {
           model: jenisKegiatan,
@@ -140,14 +141,14 @@ export const insertDataRLTigaTitikTujuh =  async (req, res) => {
         transaction = await databaseSIRS.transaction()
         const resultInsertHeader = await rlTigaTitikTujuh.create({
             rs_id: req.user.satKerId,
-            tahun: req.body.tahunDanBulan,
+            tahun: periodeDariQuery(req.body.tahunDanBulan),
             user_id: req.user.id
         }, { transaction })
 
         const dataDetail = req.body.data.map((value, index) => {
             return {
                 rs_id: req.user.satKerId,
-                tahun: req.body.tahunDanBulan,
+                tahun: periodeDariQuery(req.body.tahunDanBulan),
                 rl_tiga_titik_tujuh_id: resultInsertHeader.id,
                 jenis_kegiatan_id: value.jenisKegiatanId,
                 rmRumahSakit: value.rmRumahSakit,
