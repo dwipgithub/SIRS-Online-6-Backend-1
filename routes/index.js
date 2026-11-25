@@ -154,6 +154,7 @@ import {
   insertRLTigaTitikDua,
   deleteRLTigaTitikDua,
   updateRLTigaTitikDua,
+  downloadExcelRLTigaTitikDua,
 } from "../controllers/RLTigaTitikDuaController.js";
 
 //Jenis Kegiatan RL 3.9
@@ -328,6 +329,17 @@ import { insertValidasi } from "../controllers/ValidasiController.js";
 
 import { getStatusSatset } from "../controllers/StatusSatset.js";
 
+// Akses berdasarkan peran & wilayah (lihat config/peran.js, middleware/AksesRL.js)
+import { PERAN } from "../config/peran.js";
+import {
+  hanyaPeran,
+  cekWilayahRS,
+  cekAksesData,
+  aksesWilayahRS,
+  MAKS_RS_EXCEL,
+} from "../middleware/AksesRL.js";
+import { rlTigaTitikDuaDetail } from "../models/RLTigaTitikDuaModel.js";
+
 const router = express.Router();
 
 // Validasi
@@ -370,24 +382,50 @@ router.get("/apisirs6v2/rltigatitiksatu", verifyToken, getRLTigaTitikSatu);
 router.get("/apisirs6v2/rltigatitiksatu/:id", verifyToken, showRLTigaTitikSatu);
 
 // RL 3.2
+// Lihat data : semua peran, dibatasi wilayah (RS sendiri / kab-kota / provinsi / semua)
+// Tambah/ubah/hapus : hanya Rumah Sakit, dan hanya data miliknya sendiri
+const cariRsIdRL32 = async (id) => {
+  const row = await rlTigaTitikDuaDetail.findByPk(id, { attributes: ["rs_id"] });
+  return row ? row.rs_id : null;
+};
 router.post(
   "/apisirs6v2/rltigatitikdua",
   verifyCsrfToken,
   verifyToken,
+  hanyaPeran(PERAN.RS),
   insertRLTigaTitikDua
 );
-router.get("/apisirs6v2/rltigatitikdua", verifyToken, getRLTigaTitikDua);
+router.get(
+  "/apisirs6v2/rltigatitikdua",
+  verifyToken,
+  cekWilayahRS,
+  getRLTigaTitikDua
+);
+// Excel harus didaftarkan SEBELUM "/:id" agar tidak dianggap id
+router.get(
+  "/apisirs6v2/rltigatitikdua/excel",
+  verifyToken,
+  aksesWilayahRS({ maks: MAKS_RS_EXCEL }),
+  downloadExcelRLTigaTitikDua
+);
 router.delete(
   "/apisirs6v2/rltigatitikdua/:id",
   verifyCsrfToken,
   verifyToken,
+  hanyaPeran(PERAN.RS),
   deleteRLTigaTitikDua
 );
-router.get("/apisirs6v2/rltigatitikdua/:id", verifyToken, showRLTigaTitikDua);
+router.get(
+  "/apisirs6v2/rltigatitikdua/:id",
+  verifyToken,
+  cekAksesData(cariRsIdRL32),
+  showRLTigaTitikDua
+);
 router.patch(
   "/apisirs6v2/rltigatitikdua/:id",
   verifyCsrfToken,
   verifyToken,
+  hanyaPeran(PERAN.RS),
   updateRLTigaTitikDua
 );
 

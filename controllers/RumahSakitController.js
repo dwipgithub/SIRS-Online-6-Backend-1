@@ -1,7 +1,5 @@
-import { get, show } from '../models/RumahSakitModel.js'
-import axios from "axios";
-import dotenv from "dotenv";
-dotenv.config();
+import { ambilProfilRS } from "../services/ApiFaskesService.js";
+import { daftarRSAktif } from "../services/WilayahRSService.js";
 
 // export const getRumahSakit = (req, res) => {
 //     get(req, (err, results) => {
@@ -36,46 +34,40 @@ dotenv.config();
 // }
 
 
-export const getRumahSakit = (req, res) => {
-  get(req, (err, results) => {
-    const message = results.length ? "data found" : "data not found";
+// GET /apisirs6v2/rumahsakit?provinsiId=..|kabKotaId=..
+// Sumber: API Faskes (di-cache, cadangan db_fasyankes) lewat WilayahRSService.
+// Bentuk respons sama dengan versi lama (dipakai banyak halaman RL):
+//   { id (= kode RS), nama, alamat, kab_kota_nama, provinsi_nama }
+export const getRumahSakit = async (req, res) => {
+  try {
+    const wilayah = {};
+    if (req.query.provinsiId) wilayah.provinsiId = String(req.query.provinsiId);
+    if (req.query.kabKotaId) wilayah.kabKotaId = String(req.query.kabKotaId);
+
+    const daftar = (await daftarRSAktif(wilayah))
+      .map((rs) => ({
+        id: rs.kode,
+        nama: rs.nama,
+        alamat: rs.alamat,
+        kab_kota_nama: rs.kab_kota_nama,
+        provinsi_nama: rs.provinsi_nama,
+      }))
+      .sort((a, b) => a.id.localeCompare(b.id));
+
     res.status(200).send({
       status: true,
-      message: message,
-      data: results,
+      message: daftar.length ? "data found" : "data not found",
+      data: daftar,
     });
-  });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ status: false, message: "Gagal mengambil daftar rumah sakit" });
+  }
 };
-
 export const showRumahSakit = async (req, res) => {
   try {
-    const baseUrl = process.env.API_FASKES;
-    const username = process.env.username_API_FASKES;
-    const password = process.env.password_API_FASKES;
-
-    const loginResponse = await axios.post(
-      `${baseUrl}/faskes/login`,
-      {
-        userName: username,
-        password: password,
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-    const token =
-      loginResponse.data.access_token || loginResponse.data.data.access_token;
-
-    const response = await axios.get(
-      `${baseUrl}/faskes/rumahsakit/${req.params.id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-
-    const apiData = response.data.data;
+    // Token API Faskes disimpan & dipakai ulang (ApiFaskesService)
+    const apiData = await ambilProfilRS(req.params.id);
     const data = {
       // Field lama (dipakai form-form RL) — jangan diubah
       id: apiData.kode,
